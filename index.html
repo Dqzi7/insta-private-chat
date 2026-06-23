@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المساحة الآمنة</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 450px; text-align: center; }
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 10px; background-color: #2b2b2b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 5px; }
+        button:hover { background-color: #444; }
+        .admin-panel { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ccc; display: none; }
+        #chat-room { display: none; width: 550px; }
+        .messages { height: 280px; border: 1px solid #ccc; overflow-y: scroll; margin-bottom: 10px; padding: 10px; background: #fafafa; text-align: right; }
+        .input-group { display: flex; gap: 5px; margin-top: 10px; }
+        .input-group input { flex-grow: 1; margin: 0; }
+        .media-buttons { display: flex; gap: 5px; margin-top: 5px; }
+        .media-buttons button { flex-grow: 1; font-size: 14px; background-color: #007bff; }
+        .media-buttons button.record-btn { background-color: #dc3545; }
+        .msg-media { max-width: 200px; max-height: 150px; border-radius: 6px; display: block; margin-top: 5px; }
+        .msg-audio { width: 100%; margin-top: 5px; }
+        .msg-item { border-bottom: 1px solid #eee; padding: 5px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="login-card" class="container">
+        <h2>تسجيل دخول آمن</h2>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="login()" style="width: 100%;">دخول</button>
+    </div>
+
+    <div id="chat-room" class="container">
+        <h2>المساحة السرية 💬</h2>
+        <div class="messages" id="messages"></div>
+
+        <div class="input-group">
+            <input type="text" id="msg-input" placeholder="اكتب رسالتك هنا...">
+            <button onclick="sendMessage()">إرسال</button>
+        </div>
+
+        <div class="media-buttons">
+            <button onclick="document.getElementById('media-file').click()">🖼️ صورة / فيديو</button>
+            <input type="file" id="media-file" accept="image/*,video/*" style="display: none;" onchange="handleMediaUpload(event)">
+            <button id="record-btn" class="record-btn" onclick="toggleRecording()">🎤 تسجيل صوت</button>
+        </div>
+
+        <div id="admin-section" class="admin-panel">
+            <h3>🛡️ إدارة المستخدمين</h3>
+            <input type="text" id="new-user" placeholder="اسم المستخدم الجديد">
+            <input type="password" id="new-pass" placeholder="كلمة المرور الجديدة">
+            <button onclick="addUser()" style="background-color: #28a745; width: 100%;">إضافة مستخدم</button>
+            <br>
+            <input type="text" id="del-user" placeholder="اسم المستخدم المراد حذفه" style="margin-top: 10px;">
+            <button onclick="deleteUser()" style="background-color: #dc3545; width: 100%;">حذف مستخدم</button>
+        </div>
+        <button onclick="logout()" style="background-color: #6c757d; margin-top: 15px; width: 100%;">تسجيل الخروج</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const serverUrl = '';
+
+        const socket = io(serverUrl);
+        let currentUser = "";
+        let mediaRecorder;
+        let audioChunks = [];
+
+        async function loadMessages() {
+            try {
+                const response = await fetch(`${serverUrl}/api/messages`);
+                const messages = await response.json();
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';
+                messages.forEach(msg => appendMessage(msg));
+            } catch (err) {
+                console.log("خطأ في جلب الرسائل:", err);
+            }
+        }
+
+        async function login() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            try {
+                const response = await fetch(`${serverUrl}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await response.json();
+
+                if(data.success) {
+                    currentUser = user;
+                    document.getElementById('login-card').style.display = 'none';
+                    document.getElementById('chat-room').style.display = 'block';
+                    await loadMessages();
+                    if(user.toLowerCase() === 'dawood' || user.toLowerCase() === 'admin') {
+                        document.getElementById('admin-section').style.display = 'block';
+                    }
+                } else {
+                    alert(data.message);
+                }
+            } catch(e) {
+                alert("حدث خطأ أثناء الاتصال بالسيرفر");
+            }
+        }
+
+        async function addUser() {
+            const user = document.getElementById('new-user').value.trim();
+            const pass = document.getElementById('new-pass').value.trim();
+            if(!user || !pass) return alert("الرجاء إدخال اسم المستخدم وكلمة المرور");
+
+            try {
+                const response = await fetch(`${serverUrl}/api/users/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await response.json();
+                alert(data.message);
+                document.getElementById('new-user').value = '';
+                document.getElementById('new-pass').value = '';
+            } catch(e) {
+                alert("خطأ في إضافة المستخدم");
+            }
+        }
+
+        async function deleteUser() {
+            const user = document.getElementById('del-user').value.trim();
+            if(!user) return alert("الرجاء إدخال اسم المستخدم للحذف");
+
+            try {
+                const response = await fetch(`${serverUrl}/api/users/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user })
+                });
+                const data = await response.json();
+                alert(data.message);
+                document.getElementById('del-user').value = '';
+            } catch(e) {
+                alert("خطأ في حذف المستخدم");
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            if(input.value.trim() !== "") {
+                socket.emit('chat message', { type: 'text', sender: currentUser, content: input.value });
+                input.value = '';
+            }
+        }
+
+        function handleMediaUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fileType = file.type.startsWith('video') ? 'video' : 'image';
+                    socket.emit('chat message', { type: fileType, sender: currentUser, content: e.target.result });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('record-btn');
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        socket.emit('chat message', { type: 'audio', sender: currentUser, content: reader.result });
+                    };
+                };
+
+                mediaRecorder.start();
+                btn.textContent = "⏹️ إيقاف التسجيل";
+                btn.style.backgroundColor = "#28a745";
+            } else {
+                mediaRecorder.stop();
+                btn.textContent = "🎤 تسجيل صوت";
+                btn.style.backgroundColor = "#dc3545";
+            }
+        }
+
+        function appendMessage(msg) {
+            const messagesDiv = document.getElementById('messages');
+            const item = document.createElement('div');
+            item.className = 'msg-item';
+
+            let contentHtml = '';
+            if (msg.type === 'text') {
+                contentHtml = `<strong>${msg.sender}:</strong> ${msg.content}`;
+            } else if (msg.type === 'image') {
+                contentHtml = `<strong>${msg.sender}:</strong><br><img src="${msg.content}" class="msg-media">`;
+            } else if (msg.type === 'video') {
+                contentHtml = `<strong>${msg.sender}:</strong><br><video src="${msg.content}" class="msg-media" controls></video>`;
+            } else if (msg.type === 'audio') {
+                contentHtml = `<strong>${msg.sender}:</strong><br><audio src="${msg.content}" class="msg-audio" controls></audio>`;
+            }
+
+            item.innerHTML = contentHtml;
+            messagesDiv.appendChild(item);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        socket.on('chat message', (msg) => appendMessage(msg));
+
+        function logout() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+    "name": "private-chat",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^5.2.1",
+        "mongodb": "^6.5.0",
+        "mongoose": "^8.3.1",
+        "socket.io": "^4.8.3"
+    }
+}
