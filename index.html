@@ -3,67 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المساحة الآمنة</title>
+    <title>المساحة الآمنة - Direct</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 450px; text-align: center; }
-        input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { padding: 10px; background-color: #2b2b2b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 5px; }
-        button:hover { background-color: #444; }
-        .admin-panel { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ccc; display: none; }
-        #chat-room { display: none; width: 550px; }
-        .messages { height: 280px; border: 1px solid #ccc; overflow-y: scroll; margin-bottom: 10px; padding: 10px; background: #fafafa; text-align: right; }
-        .input-group { display: flex; gap: 5px; margin-top: 10px; }
-        .input-group input { flex-grow: 1; margin: 0; }
-        .media-buttons { display: flex; gap: 5px; margin-top: 5px; }
-        .media-buttons button { flex-grow: 1; font-size: 14px; background-color: #007bff; }
-        .media-buttons button.record-btn { background-color: #dc3545; }
-        .msg-media { max-width: 200px; max-height: 150px; border-radius: 6px; display: block; margin-top: 5px; }
-        .msg-audio { width: 100%; margin-top: 5px; }
-        .msg-item { border-bottom: 1px solid #eee; padding: 5px 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+        :root {
+            --ig-bg: #fafafa;
+            --ig-border: #dbdbdb;
+            --ig-primary: #0095f6;
+            --ig-danger: #ed4956;
+            --ig-secondary: #8e8e8e;
+        }
+
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            background-color: var(--ig-bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #262626;
+        }
+
+        /* حاوية تشبه إنستغرام */
+        .ig-card {
+            background: #fff;
+            border: 1px solid var(--ig-border);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 420px;
+            box-sizing: border-box;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .ig-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px 20px;
+            border-bottom: 1px solid var(--ig-border);
+        }
+
+        .ig-logo {
+            font-size: 32px;
+            font-weight: bold;
+            font-family: cursive;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        .ig-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ig-secondary);
+            margin-bottom: 20px;
+        }
+
+        .ig-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ig-input {
+            width: 100%;
+            padding: 12px;
+            background: #fafafa;
+            border: 1px solid var(--ig-border);
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .ig-input:focus {
+            border-color: var(--ig-secondary);
+        }
+
+        .ig-btn {
+            background-color: var(--ig-primary);
+            color: white;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+            font-family: 'Cairo', Arial, sans-serif;
+        }
+
+        .ig-btn:hover {
+            background-color: #1877f2;
+        }
+
+        /* غرفة المحادثة */
+        #chat-room {
+            display: none;
+            height: 580px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ig-border);
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .messages-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            word-break: break-word;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        /* تصميم رسائل شبيه بـ Instagram Direct */
+        .msg-outgoing {
+            background: var(--ig-primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-incoming {
+            background: #efefef;
+            color: #000;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg-sender {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            opacity: 0.85;
+            display: block;
+        }
+
+        .msg-media {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 12px;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .msg-audio {
+            width: 200px;
+            height: 35px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .chat-inputbar {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid var(--ig-border);
+            background: #fafafa;
+        }
+
+        .chat-inputbar input {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Cairo', Arial, sans-serif;
+        }
+
+        .action-icon {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--ig-primary);
+        }
+
+        .action-icon.record-on {
+            color: var(--ig-danger);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .admin-section {
+            border-top: 1px solid var(--ig-border);
+            padding: 12px 16px;
+            background: #fff;
+            display: none;
+        }
+
+        .admin-section input {
+            padding: 6px;
+            font-size: 12px;
+            margin-bottom: 6px;
+            border: 1px solid var(--ig-border);
+            border-radius: 3px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-success { background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; font-family: 'Cairo', sans-serif; margin-bottom: 6px;}
+        .btn-danger { background-color: var(--ig-danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; font-family: 'Cairo', sans-serif;}
+        .btn-secondary { background-color: var(--ig-secondary); color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%; font-family: 'Cairo', sans-serif; margin-top: 8px;}
     </style>
 </head>
 <body>
 
-    <div id="login-card" class="container">
-        <h2>تسجيل دخول آمن</h2>
-        <input type="text" id="username" placeholder="اسم المستخدم">
-        <input type="password" id="password" placeholder="كلمة المرور">
-        <button onclick="login()" style="width: 100%;">دخول</button>
-    </div>
-
-    <div id="chat-room" class="container">
-        <h2>المساحة السرية 💬</h2>
-        <div class="messages" id="messages"></div>
-
-        <div class="input-group">
-            <input type="text" id="msg-input" placeholder="اكتب رسالتك هنا...">
-            <button onclick="sendMessage()">إرسال</button>
+    <div class="ig-card">
+        <div id="login-card" class="ig-header">
+            <div class="ig-logo">Instagram</div>
+            <div class="ig-title">المساحة السرية المباشرة 💬</div>
+            <div class="ig-form">
+                <input type="text" id="username" class="ig-input" placeholder="اسم المستخدم (هاتف، أو اسم مستخدم)">
+                <input type="password" id="password" class="ig-input" placeholder="كلمة المرور">
+                <button class="ig-btn" onclick="login()">تسجيل الدخول</button>
+            </div>
         </div>
 
-        <div class="media-buttons">
-            <button onclick="document.getElementById('media-file').click()">🖼️ صورة / فيديو</button>
-            <input type="file" id="media-file" accept="image/*,video/*" style="display: none;" onchange="handleMediaUpload(event)">
-            <button id="record-btn" class="record-btn" onclick="toggleRecording()">🎤 تسجيل صوت</button>
-        </div>
+        <div id="chat-room">
+            <div class="chat-topbar">
+                <span>المساحة السرية Direct 📌</span>
+                <button class="action-icon" style="color:var(--ig-secondary); font-size: 14px;" onclick="logout()">خروج</button>
+            </div>
+            
+            <div class="messages-area" id="messages"></div>
+            
+            <div class="chat-inputbar">
+                <button class="action-icon" onclick="document.getElementById('media-file').click()">🖼️</button>
+                <input type="file" id="media-file" accept="image/*,video/*" style="display: none;" onchange="handleMediaUpload(event)">
+                
+                <button id="record-btn" class="action-icon" onclick="toggleRecording()">🎤</button>
+                
+                <input type="text" id="msg-input" placeholder="رسالة..." onkeydown="if(event.key === 'Enter') sendMessage()">
+                
+                <button class="action-icon" style="font-size: 14px; font-weight: bold;" onclick="sendMessage()">إرسال</button>
+            </div>
 
-        <div id="admin-section" class="admin-panel">
-            <h3>🛡️ إدارة المستخدمين</h3>
-            <input type="text" id="new-user" placeholder="اسم المستخدم الجديد">
-            <input type="password" id="new-pass" placeholder="كلمة المرور الجديدة">
-            <button onclick="addUser()" style="background-color: #28a745; width: 100%;">إضافة مستخدم</button>
-            <br>
-            <input type="text" id="del-user" placeholder="اسم المستخدم المراد حذفه" style="margin-top: 10px;">
-            <button onclick="deleteUser()" style="background-color: #dc3545; width: 100%;">حذف مستخدم</button>
+            <div id="admin-section" class="admin-section">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:6px; color:var(--ig-secondary);">🛡️ لوحة التحكم</div>
+                <input type="text" id="new-user" placeholder="اسم المستخدم الجديد">
+                <input type="password" id="new-pass" placeholder="كلمة المرور الجديدة">
+                <button class="btn-success" onclick="addUser()">➕ إضافة مستخدم</button>
+                
+                <input type="text" id="del-user" placeholder="اسم المستخدم للحذف">
+                <button class="btn-danger" onclick="deleteUser()">🗑️ حذف مستخدم</button>
+            </div>
+            
+            <div id="logout-btn" style="padding: 0 16px 10px; background: #fff; display: none;">
+                <button class="btn-secondary" onclick="logout()">تسجيل الخروج</button>
+            </div>
         </div>
-        <button onclick="logout()" style="background-color: #6c757d; margin-top: 15px; width: 100%;">تسجيل الخروج</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const serverUrl = '';
-
+        // تم تحديث الرابط هنا ليتصل بعنوان موقعك على Render مباشرة ويمنع أي خطأ اتصال
+        const serverUrl = 'https://insta-private-chat.onrender.com';
+        
         const socket = io(serverUrl);
+        
         let currentUser = "";
         let mediaRecorder;
         let audioChunks = [];
@@ -84,6 +313,10 @@
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
 
+            if(!user || !pass) {
+                return alert("الرجاء إدخال اسم المستخدم وكلمة المرور");
+            }
+
             try {
                 const response = await fetch(`${serverUrl}/api/login`, {
                     method: 'POST',
@@ -95,10 +328,14 @@
                 if(data.success) {
                     currentUser = user;
                     document.getElementById('login-card').style.display = 'none';
-                    document.getElementById('chat-room').style.display = 'block';
+                    document.getElementById('chat-room').style.display = 'flex';
                     await loadMessages();
+                    
+                    // إظهار لوحة التحكم للمستخدم الأساسي داود أو الأدمن
                     if(user.toLowerCase() === 'dawood' || user.toLowerCase() === 'admin') {
                         document.getElementById('admin-section').style.display = 'block';
+                    } else {
+                        document.getElementById('logout-btn').style.display = 'block';
                     }
                 } else {
                     alert(data.message);
@@ -111,8 +348,8 @@
         async function addUser() {
             const user = document.getElementById('new-user').value.trim();
             const pass = document.getElementById('new-pass').value.trim();
-            if(!user || !pass) return alert("الرجاء إدخال اسم المستخدم وكلمة المرور");
-
+            if(!user || !pass) return alert("الرجاء تعبئة الحقول الخاصة بالمستخدم الجديد");
+            
             try {
                 const response = await fetch(`${serverUrl}/api/users/add`, {
                     method: 'POST',
@@ -130,8 +367,8 @@
 
         async function deleteUser() {
             const user = document.getElementById('del-user').value.trim();
-            if(!user) return alert("الرجاء إدخال اسم المستخدم للحذف");
-
+            if(!user) return alert("الرجاء كتابة اسم المستخدم المراد حذفه");
+            
             try {
                 const response = await fetch(`${serverUrl}/api/users/delete`, {
                     method: 'POST',
@@ -169,53 +406,63 @@
         async function toggleRecording() {
             const btn = document.getElementById('record-btn');
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
 
-                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = () => {
-                        socket.emit('chat message', { type: 'audio', sender: currentUser, content: reader.result });
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => {
+                            socket.emit('chat message', { type: 'audio', sender: currentUser, content: reader.result });
+                        };
                     };
-                };
 
-                mediaRecorder.start();
-                btn.textContent = "⏹️ إيقاف التسجيل";
-                btn.style.backgroundColor = "#28a745";
+                    mediaRecorder.start();
+                    btn.classList.add('record-on');
+                    btn.textContent = "⏹️";
+                } catch(err) {
+                    alert("يجب السماح بالوصول إلى الميكروفون لتتمكن من التسجيل.");
+                }
             } else {
                 mediaRecorder.stop();
-                btn.textContent = "🎤 تسجيل صوت";
-                btn.style.backgroundColor = "#dc3545";
+                btn.classList.remove('record-on');
+                btn.textContent = "🎤";
             }
         }
 
         function appendMessage(msg) {
             const messagesDiv = document.getElementById('messages');
-            const item = document.createElement('div');
-            item.className = 'msg-item';
-
-            let contentHtml = '';
+            const bubble = document.createElement('div');
+            
+            // تحديد اتجاه ظهور الرسالة (يمين للمرسل، يسار للمستقبل)
+            const isMe = msg.sender === currentUser;
+            bubble.className = `msg-bubble ${isMe ? 'msg-outgoing' : 'msg-incoming'}`;
+            
+            let contentHtml = `<span class="msg-sender">${msg.sender}</span>`;
+            
             if (msg.type === 'text') {
-                contentHtml = `<strong>${msg.sender}:</strong> ${msg.content}`;
+                contentHtml += `<span>${msg.content}</span>`;
             } else if (msg.type === 'image') {
-                contentHtml = `<strong>${msg.sender}:</strong><br><img src="${msg.content}" class="msg-media">`;
+                contentHtml += `<img src="${msg.content}" class="msg-media">`;
             } else if (msg.type === 'video') {
-                contentHtml = `<strong>${msg.sender}:</strong><br><video src="${msg.content}" class="msg-media" controls></video>`;
+                contentHtml += `<video src="${msg.content}" class="msg-media" controls></video>`;
             } else if (msg.type === 'audio') {
-                contentHtml = `<strong>${msg.sender}:</strong><br><audio src="${msg.content}" class="msg-audio" controls></audio>`;
+                contentHtml += `<audio src="${msg.content}" class="msg-audio" controls></audio>`;
             }
 
-            item.innerHTML = contentHtml;
-            messagesDiv.appendChild(item);
+            bubble.innerHTML = contentHtml;
+            messagesDiv.appendChild(bubble);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        socket.on('chat message', (msg) => appendMessage(msg));
+        socket.on('chat message', (msg) => {
+            appendMessage(msg);
+        });
 
         function logout() {
             location.reload();
