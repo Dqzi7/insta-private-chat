@@ -26,7 +26,6 @@
             color: #262626;
         }
 
-        /* حاوية تشبه إنستغرام */
         .ig-card {
             background: #fff;
             border: 1px solid var(--ig-border);
@@ -102,11 +101,9 @@
             background-color: #1877f2;
         }
 
-        /* غرفة المحادثة */
         #chat-room {
             display: none;
             height: 580px;
-            display: flex;
             flex-direction: column;
         }
 
@@ -140,7 +137,6 @@
             position: relative;
         }
 
-        /* تصميم رسائل شبيه بـ Instagram Direct */
         .msg-outgoing {
             background: var(--ig-primary);
             color: white;
@@ -286,12 +282,14 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
-        // يتم جلب النطاق (الدومين) الحالي تلقائياً لضمان توافق الاتصال الآمن مع Render
-        const serverUrl = window.location.origin;
+        // تم تصريح الرابط برابط التطبيق الصريح لمنع أي خطأ اتصال
+        const serverUrl = 'https://insta-private-chat.onrender.com';
         
-        const socket = io(serverUrl);
+        const socket = io(serverUrl, {
+            transports: ['websocket', 'polling']
+        });
         
         let currentUser = "";
         let mediaRecorder;
@@ -331,7 +329,6 @@
                     document.getElementById('chat-room').style.display = 'flex';
                     await loadMessages();
                     
-                    // إظهار لوحة التحكم للمستخدم الأساسي داود أو الأدمن
                     if(user.toLowerCase() === 'dawood' || user.toLowerCase() === 'admin') {
                         document.getElementById('admin-section').style.display = 'block';
                     } else {
@@ -439,7 +436,6 @@
             const messagesDiv = document.getElementById('messages');
             const bubble = document.createElement('div');
             
-            // تحديد اتجاه ظهور الرسالة (يمين للمرسل، يسار للمستقبل)
             const isMe = msg.sender === currentUser;
             bubble.className = `msg-bubble ${isMe ? 'msg-outgoing' : 'msg-incoming'}`;
             
